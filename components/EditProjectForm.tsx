@@ -231,7 +231,7 @@ const EditProjectForm: React.FC<EditProjectFormProps> = ({ project, onUpdateProj
                               onChange={handleChange} 
                               placeholder="Dán link nhúng (src) từ Google Sheets..."
                             />
-                            <p className="text-xs text-gray-500 mt-1">Trong Google Sheet, chọn 'Tệp' > 'Chia sẻ' > 'Xuất bản lên web' > 'Nhúng', sau đó sao chép đường link trong thuộc tính 'src'.</p>
+                            <p className="text-xs text-gray-500 mt-1">Trong Google Sheet, chọn 'Tệp' {'>'} 'Chia sẻ' {'>'} 'Xuất bản lên web' {'>'} 'Nhúng', sau đó sao chép đường link trong thuộc tính 'src'.</p>
                         </div>
                          <div>
                             <Input 
