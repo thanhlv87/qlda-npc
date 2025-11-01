@@ -7,15 +7,14 @@ import 'firebase/compat/storage';
 // SECURE: Replaced hardcoded Firebase configuration with environment variables.
 // This is a critical security fix to prevent exposing keys in public repositories.
 // The user must now provide these variables in their deployment environment.
-// FIX: Added checks for `process` and `process.env` to prevent runtime errors in environments
-// where they are not defined. Also removed 'VITE_' prefix for better compatibility.
+// FIX: Using import.meta.env for Vite compatibility with VITE_ prefix
 const firebaseConfig = {
-  apiKey: (typeof process !== 'undefined' && process.env) ? process.env.FIREBASE_API_KEY : undefined,
-  authDomain: (typeof process !== 'undefined' && process.env) ? process.env.FIREBASE_AUTH_DOMAIN : undefined,
-  projectId: (typeof process !== 'undefined' && process.env) ? process.env.FIREBASE_PROJECT_ID : undefined,
-  storageBucket: (typeof process !== 'undefined' && process.env) ? process.env.FIREBASE_STORAGE_BUCKET : undefined,
-  messagingSenderId: (typeof process !== 'undefined' && process.env) ? process.env.FIREBASE_MESSAGING_SENDER_ID : undefined,
-  appId: (typeof process !== 'undefined' && process.env) ? process.env.FIREBASE_APP_ID : undefined,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase only if all configuration keys are present.

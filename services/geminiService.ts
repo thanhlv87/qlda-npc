@@ -5,9 +5,11 @@ import type { DailyReport, Project } from '../types.ts';
 // Initialize AI service safely.
 let ai: GoogleGenAI | null = null;
 try {
-  // Adheres to the guideline of using process.env.API_KEY,
-  // but won't crash the app if it's not available in the deployment environment.
-  ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Using import.meta.env for Vite compatibility with VITE_ prefix
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (apiKey) {
+    ai = new GoogleGenAI({ apiKey });
+  }
 } catch (error) {
   console.error(
     "Gemini AI initialization failed. The API key might be missing or invalid.",
