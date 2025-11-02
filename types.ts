@@ -36,6 +36,7 @@ export interface SupervisorAContact {
 }
 
 export interface ProjectReview {
+  id: string; // Unique ID for each comment
   comment: string;
   reviewedById: string; // User ID of the reviewer
   reviewedByName: string; // Denormalized user name to avoid permission issues
@@ -67,7 +68,7 @@ export interface Project {
   supervisionUnit: ContactUnit;
   projectManagementUnits?: ProjectManagementContact[];
   supervisorA: SupervisorAContact;
-  reviews?: Record<string, ProjectReview>; // Map of reportId to review data
+  reviews?: Record<string, ProjectReview[]>; // Map of reportId to array of review comments
   scheduleSheetUrl?: string; // URL for embedding Google Sheet schedule
   scheduleSheetEditUrl?: string; // URL for editing the Google Sheet
 

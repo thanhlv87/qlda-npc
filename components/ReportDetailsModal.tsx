@@ -7,12 +7,12 @@ interface ReportDetailsModalProps {
   report: DailyReport;
   project: Project;
   currentUser: User | null;
-  review?: ProjectReview;
-  reviewerName?: string;
+  reviews?: ProjectReview[];
   onClose: () => void;
   onEdit: (report: DailyReport) => void;
   onDelete: (reportId: string, reportDate: string) => void;
   onReview: (report: DailyReport) => void;
+  onDeleteReview: (projectId: string, reportId: string, review: ProjectReview) => Promise<void>;
   onImageClick: (images: string[], startIndex: number) => void;
   previousProgressPercentage?: number;
 }
@@ -21,12 +21,12 @@ const ReportDetailsModal: React.FC<ReportDetailsModalProps> = ({
   report,
   project,
   currentUser,
-  review,
-  reviewerName,
+  reviews = [],
   onClose,
   onEdit,
   onDelete,
   onReview,
+  onDeleteReview,
   onImageClick,
   previousProgressPercentage,
 }) => {
@@ -135,26 +135,44 @@ const ReportDetailsModal: React.FC<ReportDetailsModalProps> = ({
           )}
 
           <section>
-             <h4 className="text-lg font-semibold text-gray-800 mb-2">Xác nhận & Nhận xét</h4>
-             {review ? (
-                 <div className="bg-green-50 border-l-4 border-green-500 text-green-800 p-4 rounded-r-lg">
-                    <p className="font-bold text-sm">✔️ {reviewerName}:</p>
-                    <p className="text-sm italic mt-1 whitespace-pre-wrap">"{review.comment}"</p>
-                </div>
+             <h4 className="text-lg font-semibold text-gray-800 mb-2">Xác nhận & Nhận xét ({reviews.length})</h4>
+             {reviews.length > 0 ? (
+                 <div className="space-y-3 max-h-64 overflow-y-auto">
+                   {reviews.map((rev) => (
+                     <div key={rev.id} className="bg-green-50 border-l-4 border-green-500 text-green-800 p-4 rounded-r-lg relative">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-bold text-sm">✔️ {rev.reviewedByName}</p>
+                            <p className="text-xs text-gray-600">{new Date(rev.reviewedAt).toLocaleString('vi-VN')}</p>
+                            <p className="text-sm italic mt-1 whitespace-pre-wrap">"{rev.comment}"</p>
+                          </div>
+                          {currentUser && (rev.reviewedById === currentUser.id || currentUser.role === 'Admin') && (
+                            <button
+                              onClick={() => onDeleteReview(project.id, report.id, rev)}
+                              className="ml-2 text-red-600 hover:text-red-800 text-xs font-semibold"
+                              title="Xóa nhận xét"
+                            >
+                              Xóa
+                            </button>
+                          )}
+                        </div>
+                     </div>
+                   ))}
+                 </div>
              ) : (
                 <p className="text-sm text-gray-500 italic">Chưa có nhận xét nào.</p>
              )}
           </section>
         </main>
 
-        {(canEdit || canDelete || (canReview && !review)) && (
+        {(canEdit || canDelete || canReview) && (
             <footer className="p-4 bg-gray-50 flex justify-end space-x-3 rounded-b-lg border-t sticky bottom-0">
-              {canReview && !review && (
-                 <button 
+              {canReview && (
+                 <button
                     onClick={() => onReview(report)}
                     className="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
                 >
-                    Xác nhận & Nhận xét
+                    Thêm Nhận xét
                 </button>
               )}
               {canEdit && (

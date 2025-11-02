@@ -431,22 +431,36 @@ const App: React.FC = () => {
     
     const handleAddReportReview = async (projectId: string, reportId: string, comment: string, user: User) => {
         try {
-            // FIX: Switched to v8 syntax for document reference.
             const projectRef = db.collection('projects').doc(projectId);
             const reviewData: ProjectReview = {
+                id: `${Date.now()}-${user.id}`, // Unique ID for this comment
                 comment,
                 reviewedById: user.id,
                 reviewedByName: user.name, // Denormalize user name
                 reviewedAt: new Date().toISOString(),
             };
-            // FIX: Switched to v8 syntax for updating a document.
+            // Use arrayUnion to append to the reviews array
             await projectRef.update({
-                [`reviews.${reportId}`]: reviewData
+                [`reviews.${reportId}`]: firebase.firestore.FieldValue.arrayUnion(reviewData)
             });
             addToast('Nhận xét đã được lưu.', 'success');
         } catch (error) {
             console.error("Error adding report review:", error);
             addToast('Không thể lưu nhận xét.', 'error');
+        }
+    };
+
+    const handleDeleteReportReview = async (projectId: string, reportId: string, reviewToDelete: ProjectReview) => {
+        try {
+            const projectRef = db.collection('projects').doc(projectId);
+            // Use arrayRemove to remove the specific review from the array
+            await projectRef.update({
+                [`reviews.${reportId}`]: firebase.firestore.FieldValue.arrayRemove(reviewToDelete)
+            });
+            addToast('Nhận xét đã được xóa.', 'success');
+        } catch (error) {
+            console.error("Error deleting report review:", error);
+            addToast('Không thể xóa nhận xét.', 'error');
         }
     };
 
@@ -735,6 +749,7 @@ const App: React.FC = () => {
                             onUpdateReport={handleUpdateReport}
                             onDeleteReport={handleDeleteReport}
                             onAddReportReview={handleAddReportReview}
+                            onDeleteReportReview={handleDeleteReportReview}
                             // Document Management Props
                             files={projectFiles}
                             folders={projectFolders}
