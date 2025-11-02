@@ -3,6 +3,7 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 import 'firebase/compat/storage';
+import 'firebase/compat/messaging';
 
 // SECURE: Replaced hardcoded Firebase configuration with environment variables.
 // This is a critical security fix to prevent exposing keys in public repositories.
@@ -41,5 +42,16 @@ const db = app ? firebase.firestore() : null;
 const storage = app ? firebase.storage() : null;
 const googleProvider = app ? new firebase.auth.GoogleAuthProvider() : null;
 
+// Initialize Firebase Cloud Messaging
+// Check if messaging is supported (not in all browsers/environments)
+let messaging = null;
+try {
+  if (app && firebase.messaging.isSupported()) {
+    messaging = firebase.messaging();
+  }
+} catch (error) {
+  console.log('Firebase messaging not supported in this environment');
+}
+
 // FIX: Export the firebase object itself for use with features like FieldValue.
-export { auth, db, storage, googleProvider, firebase };
+export { auth, db, storage, googleProvider, firebase, messaging };

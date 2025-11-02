@@ -28,6 +28,64 @@ async function getUsersToNotify(projectId) {
  return Array.from(userIdsToNotify);
 }
 
+// Helper function to send FCM push notifications
+async function sendFCMNotifications(userIds, notificationData) {
+  const fcmPromises = [];
+
+  for (const userId of userIds) {
+    try {
+      // Get user's FCM token
+      const userDoc = await db.collection('users').doc(userId).get();
+      if (!userDoc.exists) continue;
+
+      const fcmToken = userDoc.data()?.fcmToken;
+      if (!fcmToken) {
+        console.log(`No FCM token for user ${userId}`);
+        continue;
+      }
+
+      const message = {
+        notification: {
+          title: notificationData.title,
+          body: notificationData.message,
+        },
+        data: {
+          type: notificationData.type,
+          projectId: notificationData.projectId || '',
+          reportId: notificationData.reportId || '',
+          actionUrl: notificationData.actionUrl || '/',
+        },
+        token: fcmToken,
+      };
+
+      fcmPromises.push(
+        admin.messaging().send(message)
+          .then(() => {
+            console.log(`FCM sent successfully to user ${userId}`);
+          })
+          .catch(error => {
+            console.error(`Failed to send FCM to ${userId}:`, error.code);
+
+            // If token is invalid, remove it from database
+            if (error.code === 'messaging/invalid-registration-token' ||
+                error.code === 'messaging/registration-token-not-registered') {
+              console.log(`Removing invalid FCM token for user ${userId}`);
+              return db.collection('users').doc(userId).update({
+                fcmToken: null,
+                fcmTokenUpdatedAt: null,
+              });
+            }
+          })
+      );
+    } catch (error) {
+      console.error(`Error processing FCM for user ${userId}:`, error);
+    }
+  }
+
+  await Promise.all(fcmPromises);
+  console.log(`Sent FCM to ${fcmPromises.length} users`);
+}
+
 // Trigger when a new report is created
 exports.onReportCreated = onDocumentCreated('reports/{reportId}', async (event) => {
   const report = event.data.data();
@@ -81,6 +139,17 @@ exports.onReportCreated = onDocumentCreated('reports/{reportId}', async (event) 
   await batch.commit();
 
   console.log(`Created ${usersToNotify.length} notifications for new report`);
+
+  // Send FCM push notifications
+  await sendFCMNotifications(usersToNotify, {
+    type: 'report_created',
+    title: 'Báo cáo mới',
+    message: `${reporterName} đã tạo báo cáo cho dự án "${projectName}" - Ngày ${report.date}`,
+    projectId: report.projectId,
+    reportId: reportId,
+    actionUrl: `/projects/${report.projectId}/reports/${reportId}`,
+  });
+
   return null;
 });
 
@@ -147,6 +216,17 @@ exports.onReportUpdated = onDocumentUpdated('reports/{reportId}', async (event) 
   await batch.commit();
 
   console.log(`Created ${usersToNotify.length} notifications for updated report`);
+
+  // Send FCM push notifications
+  await sendFCMNotifications(usersToNotify, {
+    type: 'report_updated',
+    title: 'Báo cáo được cập nhật',
+    message: `${updaterName} đã cập nhật báo cáo dự án "${projectName}" - Ngày ${after.date}`,
+    projectId: after.projectId,
+    reportId: reportId,
+    actionUrl: `/projects/${after.projectId}/reports/${reportId}`,
+  });
+
   return null;
 });
 
@@ -220,6 +300,16 @@ exports.onReviewAdded = onDocumentUpdated('projects/{projectId}', async (event) 
 
     await batch.commit();
     console.log(`Created ${usersToNotify.length} notifications for new comment`);
+
+    // Send FCM push notifications
+    await sendFCMNotifications(usersToNotify, {
+      type: 'comment_added',
+      title: 'Nhận xét mới',
+      message: `${review.reviewedByName} đã nhận xét báo cáo dự án "${projectName}" - Ngày ${report.date}`,
+      projectId: projectId,
+      reportId: reportId,
+      actionUrl: `/projects/${projectId}/reports/${reportId}`,
+    });
   }
 
   return null;
@@ -275,5 +365,16 @@ exports.onDocumentUploaded = onDocumentCreated('projects/{projectId}/files/{file
   await batch.commit();
 
   console.log(`Created ${usersToNotify.length} notifications for new document`);
+
+  // Send FCM push notifications
+  await sendFCMNotifications(usersToNotify, {
+    type: 'document_uploaded',
+    title: 'Tài liệu mới',
+    message: `${uploaderName} đã tải lên tài liệu "${file.name}" cho dự án "${projectName}"`,
+    projectId: projectId,
+    reportId: '',
+    actionUrl: `/projects/${projectId}/documents`,
+  });
+
   return null;
 });

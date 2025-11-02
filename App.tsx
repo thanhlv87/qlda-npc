@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 // FIX: Switched to Firebase v8 compat imports and syntax to resolve module errors.
 // All modular v9 imports have been removed.
-import { auth, db, googleProvider, firebase, storage } from './services/firebase.ts';
+import { auth, db, googleProvider, firebase, storage, messaging } from './services/firebase.ts';
 import type { User, Project, DailyReport, ProjectReview, Role, ProjectFile, ProjectFolder } from './types.ts';
 import { permissions } from './services/permissions.ts';
+import { fcmService } from './services/fcmService.ts';
 
 // Components
 import Login from './components/Login.tsx';
@@ -145,6 +146,49 @@ const App: React.FC = () => {
 
         return () => unsubscribe();
     }, [firebaseUser]);
+
+    // Effect for setting up FCM push notifications
+    useEffect(() => {
+        // Only setup FCM if user is logged in, has a role, and messaging is supported
+        if (!currentUser?.id || !currentUser?.role || !messaging) {
+            return;
+        }
+
+        let foregroundUnsubscribe: (() => void) | null = null;
+
+        const setupFCM = async () => {
+            try {
+                console.log('Requesting FCM permission for user:', currentUser.id);
+                const token = await fcmService.requestPermissionAndGetToken(currentUser.id);
+
+                if (token) {
+                    console.log('FCM token obtained and saved:', token);
+
+                    // Setup foreground message listener
+                    foregroundUnsubscribe = fcmService.setupForegroundListener((payload) => {
+                        console.log('Foreground notification received:', payload);
+
+                        // Show a toast notification when app is open
+                        const title = payload.notification?.title || payload.data?.title || 'Thông báo mới';
+                        const message = payload.notification?.body || payload.data?.message || '';
+                        addToast(`${title}: ${message}`, 'success');
+                    });
+                } else {
+                    console.log('User denied notification permission or token not available');
+                }
+            } catch (error) {
+                console.error('Error setting up FCM:', error);
+            }
+        };
+
+        setupFCM();
+
+        return () => {
+            if (foregroundUnsubscribe) {
+                foregroundUnsubscribe();
+            }
+        };
+    }, [currentUser?.id, currentUser?.role]);
 
     // Effect for fetching projects and users for ADMINS (who can see everything)
     useEffect(() => {
@@ -314,6 +358,15 @@ const App: React.FC = () => {
     };
 
     const handleLogout = async () => {
+        // Remove FCM token before logout
+        if (currentUser?.id && messaging) {
+            try {
+                await fcmService.removeToken(currentUser.id);
+            } catch (error) {
+                console.error('Error removing FCM token:', error);
+            }
+        }
+
         // FIX: Switched to v8 syntax for signOut.
         await auth.signOut();
         setCurrentUser(null);
