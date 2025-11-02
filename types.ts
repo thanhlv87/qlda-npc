@@ -113,3 +113,20 @@ export interface ProjectFolder {
     createdAt: string; // ISO 8601 timestamp
     path: string; // path within the project's document structure
 }
+
+// Notification System
+export interface Notification {
+    id: string;
+    type: 'report_created' | 'report_updated' | 'comment_added' | 'document_uploaded' | 'user_mentioned';
+    title: string;
+    message: string;
+    projectId: string;
+    projectName: string;
+    reportId?: string;
+    reportDate?: string;
+    createdBy: string;
+    createdByName: string;
+    createdAt: string;
+    read: boolean;
+    actionUrl?: string; // URL to navigate when clicked
+}

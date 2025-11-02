@@ -1,0 +1,10 @@
+# Node.js dependency directory
+node_modules/
+
+# Firebase config
+.runtimeconfig.json
+
+# Logs
+npm-debug.log
+firebase-debug.log
+firebase-debug.*.log
