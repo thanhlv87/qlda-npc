@@ -5,16 +5,14 @@ import { CheckCircleIcon } from './Icons.tsx';
 interface ReportCardProps {
   report: DailyReport;
   onViewDetails: () => void;
-  review?: ProjectReview;
-  reviewerName?: string;
+  reviews?: ProjectReview[];
   previousProgressPercentage?: number;
 }
 
 const ReportCard: React.FC<ReportCardProps> = ({
   report,
   onViewDetails,
-  review,
-  reviewerName,
+  reviews = [],
   previousProgressPercentage,
 }) => {
   const hasImages = report.images.length > 0;
@@ -91,11 +89,14 @@ const ReportCard: React.FC<ReportCardProps> = ({
             </div>
         )}
 
-        {/* Review Section */}
-        {review && (
+        {/* Reviews Section */}
+        {reviews.length > 0 && (
             <div className="text-green-700 flex items-center text-xs pt-1">
                  <CheckCircleIcon className="h-4 w-4 mr-1.5 shrink-0" />
-                 <p className="italic truncate"><span className="font-semibold">{reviewerName}:</span> "{review.comment}"</p>
+                 <p className="italic">
+                   {reviews.length} nhận xét
+                   {reviews.length === 1 && reviews[0].comment && `: "${reviews[0].comment.substring(0, 50)}${reviews[0].comment.length > 50 ? '...' : ''}"`}
+                 </p>
             </div>
         )}
       </div>

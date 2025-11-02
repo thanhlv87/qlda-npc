@@ -131,6 +131,7 @@ interface ProjectDetailsProps {
     onUpdateReport: (reportData: DailyReport) => Promise<void>;
     onDeleteReport: (reportId: string, projectId: string) => Promise<void>;
     onAddReportReview: (projectId: string, reportId: string, comment: string, user: User) => Promise<void>;
+    onDeleteReportReview: (projectId: string, reportId: string, review: ProjectReview) => Promise<void>;
     // Document Management Props
     files: ProjectFile[];
     folders: ProjectFolder[];
@@ -168,6 +169,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     onUpdateReport,
     onDeleteReport,
     onAddReportReview,
+    onDeleteReportReview,
     // Document Management Props
     files,
     folders,
@@ -179,7 +181,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     onBulkDelete,
     uploadProgress
 }) => {
-    const [reports, setReports] = useState<(DailyReport & { managerReview?: ProjectReview })[]>([]);
+    const [reports, setReports] = useState<(DailyReport & { managerReviews?: ProjectReview[] })[]>([]);
     const [isReportsLoading, setIsReportsLoading] = useState(true);
     const [view, setView] = useState<DetailsView>('details');
     const [activeTab, setActiveTab] = useState<ActiveTab>(() => getDefaultTabForRole(currentUser?.role || null));
@@ -191,7 +193,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     const [displayedAiSummary, setDisplayedAiSummary] = useState<string>('');
     const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
     const [lightboxIndex, setLightboxIndex] = useState(0);
-    const [viewingReport, setViewingReport] = useState<(DailyReport & { managerReview?: ProjectReview }) | null>(null);
+    const [viewingReport, setViewingReport] = useState<(DailyReport & { managerReviews?: ProjectReview[] }) | null>(null);
     const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
     const [isAdvancedToolsVisible, setIsAdvancedToolsVisible] = useState(false);
     const [mobileAdvancedTab, setMobileAdvancedTab] = useState<'summary' | 'calendar' | 'stats'>('summary');
@@ -210,7 +212,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                 const report = { id: doc.id, ...doc.data() } as DailyReport;
                 return {
                     ...report,
-                    managerReview: reviewsMap[report.id],
+                    managerReviews: reviewsMap[report.id] || [], // Array of reviews
                 };
             }).sort((a, b) => { // Sort by date DD/MM/YYYY descending
                 const [dayA, monthA, yearA] = a.date.split('/').map(Number);
@@ -523,12 +525,11 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                                 const previousReport = reports[originalIndex + 1];
                                 const previousProgress = previousReport?.progressPercentage ?? 0;
                                 return (
-                                    <ReportCard 
-                                        key={report.id} 
+                                    <ReportCard
+                                        key={report.id}
                                         report={report}
                                         onViewDetails={() => setViewingReport(report)}
-                                        review={report.managerReview}
-                                        reviewerName={report.managerReview?.reviewedByName}
+                                        reviews={report.managerReviews || []}
                                         previousProgressPercentage={previousProgress}
                                     />
                                 );
@@ -723,16 +724,16 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             const previousReport = reports[reportIndex + 1];
             const previousProgress = previousReport?.progressPercentage ?? 0;
             return (
-                <ReportDetailsModal 
+                <ReportDetailsModal
                     report={viewingReport}
                     project={project}
                     currentUser={currentUser}
-                    review={viewingReport.managerReview}
-                    reviewerName={viewingReport.managerReview?.reviewedByName}
+                    reviews={viewingReport.managerReviews || []}
                     onClose={() => setViewingReport(null)}
                     onEdit={handleEditReport}
                     onDelete={handleDeleteReportConfirm}
                     onReview={handleStartReview}
+                    onDeleteReview={onDeleteReportReview}
                     onImageClick={handleImageClick}
                     previousProgressPercentage={previousProgress}
                 />

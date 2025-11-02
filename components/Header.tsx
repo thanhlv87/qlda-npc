@@ -11,7 +11,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
-        <header className="bg-primary text-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
+        <header className="bg-orange-600 text-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
             <h1 className="text-xl sm:text-2xl font-bold truncate">Phần mềm quản lý dự án - NPSC</h1>
             {user && (
                 <div className="relative">
