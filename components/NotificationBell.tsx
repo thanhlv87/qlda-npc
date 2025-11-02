@@ -14,7 +14,9 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ currentUser }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentUser?.id) return;
+
+    console.log('Setting up notification listener for user:', currentUser.id);
 
     // Listen to notifications
     const unsubscribe = db
@@ -23,22 +25,30 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ currentUser }) => {
       .collection('notifications')
       .orderBy('createdAt', 'desc')
       .limit(20)
-      .onSnapshot(snapshot => {
-        const notifs = snapshot.docs.map(doc => {
-          const data = doc.data();
-          // Convert Firestore Timestamp to ISO string
-          const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt;
+      .onSnapshot(
+        snapshot => {
+          console.log('Received notifications snapshot:', snapshot.docs.length);
+          const notifs = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Convert Firestore Timestamp to ISO string
+            const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt;
 
-          return {
-            id: doc.id,
-            ...data,
-            createdAt
-          } as Notification;
-        });
+            return {
+              id: doc.id,
+              ...data,
+              createdAt
+            } as Notification;
+          });
 
-        setNotifications(notifs);
-        setUnreadCount(notifs.filter(n => !n.read).length);
-      });
+          setNotifications(notifs);
+          setUnreadCount(notifs.filter(n => !n.read).length);
+        },
+        error => {
+          console.error('Error listening to notifications:', error);
+          console.error('Error code:', error.code);
+          console.error('User ID:', currentUser.id);
+        }
+      );
 
     return () => unsubscribe();
   }, [currentUser.id]);
