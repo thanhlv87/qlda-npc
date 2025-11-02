@@ -788,7 +788,7 @@ const App: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-neutral flex flex-col">
-            <Header user={currentUser} onLogout={handleLogout} />
+            <Header user={currentUser} onLogout={handleLogout} onNavigateToProject={handleSelectProject} />
             <main className="p-4 sm:p-6 lg:p-8 flex-grow">
                 <Suspense fallback={<LoadingSpinner />}>
                     {renderContent()}

@@ -6,9 +6,10 @@ import NotificationBell from './NotificationBell.tsx';
 interface HeaderProps {
     user: User | null;
     onLogout: () => void;
+    onNavigateToProject?: (projectId: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ user, onLogout, onNavigateToProject }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
@@ -18,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
                 <div className="relative">
                     {/* Desktop Menu */}
                     <div className="hidden sm:flex items-center space-x-4">
-                        {user.role && <NotificationBell currentUser={user} />}
+                        {user.role && <NotificationBell currentUser={user} onNavigateToProject={onNavigateToProject} />}
                         <div>
                             <span className="font-medium">Chào, {user.name} ({user.role || 'Chờ duyệt'})</span>
                         </div>
@@ -32,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
 
                     {/* Mobile Menu Button */}
                     <div className="sm:hidden flex items-center space-x-2">
-                        {user.role && <NotificationBell currentUser={user} />}
+                        {user.role && <NotificationBell currentUser={user} onNavigateToProject={onNavigateToProject} />}
                         <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white focus:outline-none p-1">
                             {isMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
                         </button>

@@ -5,9 +5,10 @@ import { notificationService } from '../services/notificationService';
 
 interface NotificationBellProps {
   currentUser: User;
+  onNavigateToProject?: (projectId: string) => void;
 }
 
-const NotificationBell: React.FC<NotificationBellProps> = ({ currentUser }) => {
+const NotificationBell: React.FC<NotificationBellProps> = ({ currentUser, onNavigateToProject }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -66,12 +67,17 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ currentUser }) => {
   }, []);
 
   const handleNotificationClick = async (notif: Notification) => {
+    // Mark as read
     if (!notif.read) {
       await notificationService.markAsRead(currentUser.id, notif.id);
     }
 
-    // TODO: Navigate to the relevant page
-    // For now just close the dropdown
+    // Navigate to project if callback exists
+    if (onNavigateToProject && notif.projectId) {
+      onNavigateToProject(notif.projectId);
+    }
+
+    // Close dropdown
     setIsOpen(false);
   };
 
