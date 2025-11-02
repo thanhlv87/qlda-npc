@@ -24,10 +24,17 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ currentUser }) => {
       .orderBy('createdAt', 'desc')
       .limit(20)
       .onSnapshot(snapshot => {
-        const notifs = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Notification));
+        const notifs = snapshot.docs.map(doc => {
+          const data = doc.data();
+          // Convert Firestore Timestamp to ISO string
+          const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt;
+
+          return {
+            id: doc.id,
+            ...data,
+            createdAt
+          } as Notification;
+        });
 
         setNotifications(notifs);
         setUnreadCount(notifs.filter(n => !n.read).length);
@@ -77,8 +84,12 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ currentUser }) => {
     }
   };
 
-  const formatTime = (timestamp: string) => {
+  const formatTime = (timestamp: string | null | undefined) => {
+    if (!timestamp) return 'Vừa xong';
+
     const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Vừa xong';
+
     const now = new Date();
     const diff = now.getTime() - date.getTime();
 
