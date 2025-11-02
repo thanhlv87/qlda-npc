@@ -42,3 +42,50 @@ self.addEventListener('activate', event => {
     })
   );
 });
+
+// Push Notification Handlers
+self.addEventListener('push', function(event) {
+  if (!event.data) return;
+
+  const data = event.data.json();
+  const options = {
+    body: data.message || data.body,
+    icon: '/icon-192.png',
+    badge: 'https://cdn-icons-png.flaticon.com/512/11464/11464129.png',
+    vibrate: [200, 100, 200],
+    tag: data.tag || 'notification',
+    requireInteraction: false,
+    data: {
+      url: data.actionUrl || '/',
+      projectId: data.projectId,
+      reportId: data.reportId
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Thông báo', options)
+  );
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+
+  const urlToOpen = event.notification.data.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(windowClients => {
+        // Check if there's already a window open
+        for (let client of windowClients) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // Open new window
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
+});
