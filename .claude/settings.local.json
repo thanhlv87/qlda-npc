@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push)",
+      "Bash(cat:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd Firestore security rules and debug documentation for notifications\n\nChanges:\n1. firestore.rules - Added comprehensive security rules\n   - Users can read their own notifications\n   - Cloud Functions can create notifications\n   - Proper permissions for projects, reports, users\n\n2. firebase.json - Added Firestore configuration\n   - Linked firestore.rules file\n   - Enables firestore:rules deployment\n\n3. DEBUG_NOTIFICATIONS.md - Complete debugging guide\n   - Step-by-step troubleshooting checklist\n   - Common errors and solutions\n   - IAM permissions verification\n   - Manual testing procedures\n   - Expected data flow diagram\n\nWhy these changes are needed:\n- Cloud Functions were deployed but couldn''t write to Firestore\n- Missing security rules prevented notification creation\n- Need systematic debugging approach\n\nNext steps:\n1. Verify Cloud Function logs in Firebase Console\n2. Check if notifications are created in Firestore Database\n3. Test with admin account\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
