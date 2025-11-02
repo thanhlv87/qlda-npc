@@ -2,91 +2,84 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if user is authenticated
-    function isSignedIn() {
-      return request.auth != null;
+    // --- HELPER FUNCTIONS (Sử dụng cú pháp đã được kiểm chứng, ổn định) ---
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
+    function isDepartmentHead() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'DepartmentHead';
+    }
+    // Gộp Admin và Trưởng phòng để dễ sử dụng
+    function isPrivilegedUser() {
+      return isAdmin() || isDepartmentHead();
     }
 
-    // Helper function to get user role
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    // Helper function kiểm tra PM cho một dự án cụ thể (dùng cho Quản lý Tài liệu)
+    function isProjectManagerForProject(projectId) {
+        return exists(/databases/$(database)/documents/projects/$(projectId))
+               && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.projectManagerIds;
     }
 
-    // Users collection
+    // --- COLLECTION RULES ---
+
+    // Rules for 'users' collection (Lấy từ quy tắc đang hoạt động của bạn)
     match /users/{userId} {
-      // Anyone can read user data if authenticated
-      allow read: if isSignedIn();
+      allow create: if request.auth != null && request.auth.uid == userId && request.resource.data.role == null;
+      allow read: if isAdmin() || request.auth.uid == userId;
+      allow update, delete: if isAdmin();
 
-      // Users can only update their own profile
-      allow update: if isSignedIn() && request.auth.uid == userId;
-
-      // Only allow create for new user registration
-      allow create: if isSignedIn();
-
-      // Admins can delete users
-      allow delete: if isSignedIn() && getUserRole() == 'Admin';
-
-      // Notifications subcollection
+      // Notifications subcollection - NEW for notification system
       match /notifications/{notificationId} {
         // Users can read their own notifications
-        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow read: if request.auth != null && request.auth.uid == userId;
 
         // Users can update/delete their own notifications (mark as read, delete)
-        allow update, delete: if isSignedIn() && request.auth.uid == userId;
+        allow update, delete: if request.auth != null && request.auth.uid == userId;
 
         // Cloud Functions can create notifications (using service account)
         // Also allow authenticated users to create (for manual testing)
-        allow create: if isSignedIn();
+        allow create: if request.auth != null;
       }
     }
 
-    // Projects collection
+    // Rules for 'projects' collection (Lấy từ quy tắc đang hoạt động của bạn)
     match /projects/{projectId} {
-      // All authenticated users can read projects
-      allow read: if isSignedIn();
-
-      // Only admins can create/update/delete projects
-      allow create, update, delete: if isSignedIn() && getUserRole() == 'Admin';
-
-      // Files subcollection (for documents)
-      match /files/{fileId} {
-        // All authenticated users can read files
-        allow read: if isSignedIn();
-
-        // Users with access to project can create files
-        allow create: if isSignedIn();
-
-        // Only uploader or admin can delete files
-        allow delete: if isSignedIn() && (
-          resource.data.uploadedBy == request.auth.uid ||
-          getUserRole() == 'Admin'
-        );
-      }
-
-      // Folders subcollection
-      match /folders/{folderId} {
-        allow read: if isSignedIn();
-        allow create: if isSignedIn();
-        allow delete: if isSignedIn() && (
-          resource.data.createdBy == request.auth.uid ||
-          getUserRole() == 'Admin'
-        );
-      }
+      allow read: if isPrivilegedUser() ||
+                    (request.auth.uid in resource.data.projectManagerIds) ||
+                    (request.auth.uid in resource.data.leadSupervisorIds);
+      allow create: if isPrivilegedUser();
+      allow update: if isPrivilegedUser() || (request.auth.uid in resource.data.projectManagerIds);
+      allow delete: if isAdmin();
     }
 
-    // Reports collection
+    // Rules for 'reports' collection (Lấy từ quy tắc đang hoạt động của bạn)
     match /reports/{reportId} {
-      // All authenticated users can read reports
-      allow read: if isSignedIn();
+      // READ rule dùng `resource.data` để truy cập document đang được đọc.
+      allow read: if isPrivilegedUser() ||
+                    (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+                     (request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.projectManagerIds ||
+                      request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.leadSupervisorIds));
 
-      // Project managers and lead supervisors can create reports
-      allow create: if isSignedIn();
+      // CREATE rule dùng `request.resource.data` để truy cập document sắp được tạo.
+      allow create: if exists(/databases/$(database)/documents/projects/$(request.resource.data.projectId)) &&
+                     (request.auth.uid in get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.projectManagerIds ||
+                      request.auth.uid in get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.leadSupervisorIds);
 
-      // Only admins can update reports
-      allow update: if isSignedIn() && getUserRole() == 'Admin';
+      allow update, delete: if isAdmin();
+    }
 
-      // Only admins can delete reports
-      allow delete: if isSignedIn() && getUserRole() == 'Admin';
+    // --- NEW: Rules for project document subcollections (Phần bổ sung để chạy Quản lý Tài liệu) ---
+
+    match /projects/{projectId}/files/{fileId} {
+        // Cho phép list, read, create, delete cho Admin, Trưởng phòng, và PM được gán
+        allow list, read, create, delete: if isPrivilegedUser() || isProjectManagerForProject(projectId);
+    }
+
+    match /projects/{projectId}/folders/{folderId} {
+        // Cho phép list, read, create, delete cho Admin, Trưởng phòng, và PM được gán
+        allow list, read, create, delete: if isPrivilegedUser() || isProjectManagerForProject(projectId);
     }
   }
 }
