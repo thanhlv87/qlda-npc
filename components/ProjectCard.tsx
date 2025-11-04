@@ -118,25 +118,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, currentUser, onSelec
                     e.stopPropagation();
                     onDeleteProject(project.id, project.name);
                 }}
-                className="absolute top-3 right-3 bg-gray-200 text-gray-600 hover:bg-error hover:text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                className="absolute top-3 right-3 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-error hover:text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                 aria-label={`Xóa dự án ${project.name}`}
             >
                 <TrashIcon className="h-5 w-5" />
             </button>
         )}
       <div className="p-6 flex-grow">
-        <h3 className="text-xl font-bold text-primary mb-3 truncate pr-8">{project.name}</h3>
-        <div className="space-y-2 text-sm text-gray-700">
+        <h3 className="text-xl font-bold text-primary dark:text-blue-400 mb-3 truncate pr-8">{project.name}</h3>
+        <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
           <div className="flex items-center">
-            <CalendarIcon className="h-5 w-5 mr-2 text-gray-500" />
+            <CalendarIcon className="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
             <span>Ngày bắt đầu: {project.constructionStartDate || 'Chưa có'}</span>
           </div>
           <div className="flex items-center">
-            <CalendarIcon className="h-5 w-5 mr-2 text-gray-500" />
+            <CalendarIcon className="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
             <span>Nghiệm thu dự kiến: {project.plannedAcceptanceDate || 'Chưa có'}</span>
           </div>
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex justify-between mb-1">
                 <span className={`text-sm font-medium ${progressInfo.statusColor}`}>{progressInfo.statusText}</span>
                 <span className="text-sm font-medium text-secondary">{progressInfo.percentage}%</span>

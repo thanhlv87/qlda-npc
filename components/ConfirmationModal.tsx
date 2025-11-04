@@ -24,16 +24,16 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       aria-modal="true"
       onClick={onCancel}
     >
-      <div 
-        className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md"
+      <div
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Xác nhận hành động</h3>
-        <p className="text-gray-600 mb-6 whitespace-pre-wrap">{message}</p>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Xác nhận hành động</h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 whitespace-pre-wrap">{message}</p>
         <div className="flex justify-end space-x-3">
           <button
             onClick={onCancel}
-            className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+            className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             {cancelText}
           </button>

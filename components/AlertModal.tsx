@@ -15,11 +15,11 @@ const AlertModal: React.FC<AlertModalProps> = ({ title, message, onClose }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-bold text-primary mb-4">{title}</h3>
-        <p className="text-gray-600 mb-6 whitespace-pre-wrap">{message}</p>
+        <h3 className="text-lg font-bold text-primary dark:text-blue-400 mb-4">{title}</h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 whitespace-pre-wrap">{message}</p>
         <div className="flex justify-end">
           <button
             onClick={onClose}

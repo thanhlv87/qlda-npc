@@ -69,7 +69,7 @@ const PhaseCard: React.FC<{
                     </div>
                     <div>
                         <h3 className={`text-xl font-bold ${isActive ? 'text-white' : colorTheme.inactiveText}`}>{title}</h3>
-                        <p className={`mt-1 text-sm ${isActive ? 'text-blue-200' : 'text-gray-500'}`}>{description}</p>
+                        <p className={`mt-1 text-sm ${isActive ? 'text-blue-200' : 'text-gray-500 dark:text-gray-400'}`}>{description}</p>
                     </div>
                 </div>
                  <div className={`text-4xl font-bold ${isActive ? 'text-white' : colorTheme.inactiveText}`}>{count}</div>
@@ -107,8 +107,8 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, onClick,
             </div>
         </div>
         <div>
-            <p className={`text-sm font-medium transition-colors duration-200 ${isActive ? 'text-white/90' : 'text-gray-500'}`}>{title}</p>
-            <p className={`text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-800'}`}>{value}</p>
+            <p className={`text-sm font-medium transition-colors duration-200 ${isActive ? 'text-white/90' : 'text-gray-500 dark:text-gray-400'}`}>{title}</p>
+            <p className={`text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-800 dark:text-gray-200'}`}>{value}</p>
         </div>
     </button>
 );
@@ -353,10 +353,10 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="animate-fade-in space-y-8">
             {/* Collapsible Timeline Section */}
             {permissions.canUseAiSummary(currentUser) && (
-                <div className="bg-base-100 rounded-lg shadow-md border border-gray-200">
+                <div className="bg-base-100 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
                     <button
                         onClick={() => setIsTimelineVisible(!isTimelineVisible)}
-                        className="w-full flex justify-between items-center p-4 text-left font-bold text-lg text-primary hover:bg-neutral/50 rounded-lg"
+                        className="w-full flex justify-between items-center p-4 text-left font-bold text-lg text-primary dark:text-blue-400 hover:bg-neutral/50 rounded-lg"
                         aria-expanded={isTimelineVisible}
                     >
                         <span>Dòng thời gian Tổng thể các Dự án</span>
@@ -366,21 +366,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                         }
                     </button>
                     {isTimelineVisible && (
-                        <div className="border-t border-gray-200 p-4">
-                            <div className="mb-4 bg-gray-50 p-3 rounded-md border">
-                                <h4 className="font-semibold text-gray-700 mb-2">Chọn dự án để hiển thị:</h4>
+                        <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+                            <div className="mb-4 bg-gray-50 dark:bg-gray-900 p-3 rounded-md border border-gray-200 dark:border-gray-700">
+                                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Chọn dự án để hiển thị:</h4>
                                 <div className="flex gap-4 mb-3">
                                     <button onClick={handleSelectAllProjectsForTimeline} className="text-sm text-secondary font-semibold hover:underline">Chọn tất cả</button>
                                     <button onClick={handleDeselectAllProjectsForTimeline} className="text-sm text-secondary font-semibold hover:underline">Bỏ chọn tất cả</button>
                                 </div>
                                 <div className="flex flex-wrap gap-x-6 gap-y-2 max-h-24 overflow-y-auto">
                                     {projects.map(project => (
-                                        <label key={project.id} className="flex items-center space-x-2 text-sm text-gray-800 cursor-pointer">
+                                        <label key={project.id} className="flex items-center space-x-2 text-sm text-gray-800 dark:text-gray-200 cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedTimelineProjectIds.includes(project.id)}
                                                 onChange={() => handleTimelineProjectToggle(project.id)}
-                                                className="h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary shrink-0"
+                                                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-secondary focus:ring-secondary shrink-0"
                                             />
                                             <span className="whitespace-nowrap" title={project.name}>{project.name}</span>
                                         </label>
@@ -439,10 +439,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <h3 className="text-lg sm:text-xl font-bold text-yellow-800 mb-4">Tài khoản chờ Phê duyệt ({pendingUsers.length})</h3>
                     <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
                         {pendingUsers.map(user => (
-                            <div key={user.id} className="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                            <div key={user.id} className="flex justify-between items-center bg-white dark:bg-gray-800 p-3 rounded-md shadow-sm">
                                 <div>
-                                    <p className="font-semibold text-gray-800">{user.name}</p>
-                                    <p className="text-sm text-gray-500">{user.email}</p>
+                                    <p className="font-semibold text-gray-800 dark:text-gray-200">{user.name}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                                 </div>
                                 <button 
                                     onClick={() => onApproveUser(user)}
@@ -459,7 +459,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Project List Section */}
             <div>
                 <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                    <h2 className="text-3xl font-bold text-gray-800">Danh sách Dự án</h2>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Danh sách Dự án</h2>
                     <div className="flex gap-2 sm:gap-4">
                         {permissions.canManageUsers(currentUser) && (
                             <button onClick={() => onNavigate('userManagement')} className="bg-neutral text-primary font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors">
@@ -491,7 +491,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             ))}
                         </div>
                     ) : (
-                         <p className="text-center text-gray-500 py-8">
+                         <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                             {projects.length > 0 ? 'Không có dự án nào khớp với bộ lọc này.' : 'Không có dự án nào để hiển thị.'}
                         </p>
                     )

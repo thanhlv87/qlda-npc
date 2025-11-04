@@ -43,13 +43,13 @@ const ReviewReportModal: React.FC<{
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4 animate-fade-in" onClick={onClose}>
             <div className="bg-base-100 rounded-lg shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
-                <header className="p-4 border-b">
-                    <h3 className="text-xl font-bold text-primary">Xác nhận & Nhận xét Báo cáo</h3>
-                    <p className="text-sm text-gray-500">Ngày {report.date}</p>
+                <header className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-xl font-bold text-primary dark:text-blue-400">Xác nhận & Nhận xét Báo cáo</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Ngày {report.date}</p>
                 </header>
                 <form onSubmit={handleSubmit}>
                     <main className="p-6">
-                        <label htmlFor="reviewComment" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="reviewComment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Nội dung nhận xét
                         </label>
                         <textarea
@@ -58,12 +58,12 @@ const ReviewReportModal: React.FC<{
                             onChange={e => setComment(e.target.value)}
                             rows={4}
                             placeholder="Nhập nhận xét hoặc chỉ đạo của bạn..."
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-secondary focus:border-secondary"
+                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-secondary focus:border-secondary"
                             required
                         />
                     </main>
-                    <footer className="p-4 border-t flex justify-end space-x-3 rounded-b-lg">
-                        <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300">
+                    <footer className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3 rounded-b-lg">
+                        <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md hover:bg-gray-300">
                             Hủy
                         </button>
                         <button type="submit" disabled={isSubmitting} className="bg-success text-white font-bold py-2 px-6 rounded-md hover:bg-green-700 disabled:bg-gray-400">
@@ -79,18 +79,18 @@ const ReviewReportModal: React.FC<{
 // Helper components for displaying project info
 const DetailSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="mb-8">
-    <h4 className="text-lg font-semibold text-primary border-b-2 border-primary/20 pb-2 mb-4">{title}</h4>
+    <h4 className="text-lg font-semibold text-primary dark:text-blue-400 border-b-2 border-primary/20 pb-2 mb-4">{title}</h4>
     <div className="space-y-3">{children}</div>
   </div>
 );
 
 const DetailItem: React.FC<{ label: string; value?: string | React.ReactNode; icon?: React.ReactNode }> = ({ label, value, icon }) => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 text-sm items-start">
-        <dt className="font-medium text-gray-500 flex items-center">
+        <dt className="font-medium text-gray-500 dark:text-gray-400 flex items-center">
             {icon && <span className="mr-2 text-gray-400">{icon}</span>}
             {label}
         </dt>
-        <dd className="text-gray-900 md:col-span-2">
+        <dd className="text-gray-900 dark:text-white md:col-span-2">
             {value ? (
                 value
             ) : (
@@ -102,8 +102,8 @@ const DetailItem: React.FC<{ label: string; value?: string | React.ReactNode; ic
 
 
 const DateSectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="p-4 bg-gray-50 rounded-md border h-full">
-        <h5 className="font-semibold text-gray-800 mb-3 text-base">{title}</h5>
+    <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700 h-full">
+        <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 text-base">{title}</h5>
         <div className="space-y-2">
             {children}
         </div>
@@ -111,8 +111,8 @@ const DateSectionCard: React.FC<{ title: string; children: React.ReactNode }> = 
 );
 
 const ContactCard: React.FC<{ title: string; details: { label: string; value: string; icon?: React.ReactNode }[] }> = ({ title, details }) => (
-    <div className="p-4 bg-gray-50 rounded-md border h-full">
-        <h5 className="font-semibold text-gray-800 mb-3 text-base">{title}</h5>
+    <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700 h-full">
+        <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 text-base">{title}</h5>
         <div className="space-y-2">
             {details.map(item => <DetailItem key={item.label} label={item.label} value={item.value} icon={item.icon} />)}
         </div>
@@ -379,7 +379,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             className={`px-4 sm:px-5 py-2 font-semibold text-sm rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 ${
                 activeTab === tabName
                     ? 'bg-primary text-white shadow'
-                    : 'text-gray-600 hover:bg-primary/10 hover:text-primary'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-primary/10 hover:text-primary'
             }`}
         >
             {label}
@@ -393,7 +393,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             className={`${
                 active
                     ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300'
             } whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}
         >
             {children}
@@ -402,18 +402,18 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 
     const aiSummaryContent = (
         <>
-            <h3 className="text-xl font-bold text-primary mb-4">Tóm tắt tiến độ bằng AI</h3>
-            <div className="prose prose-sm max-w-none text-gray-800 mb-4 whitespace-pre-wrap min-h-[100px]">{displayedAiSummary || (isGeneratingSummary ? 'AI đang phân tích...' : 'Bấm nút để tạo tóm tắt.')}</div>
+            <h3 className="text-xl font-bold text-primary dark:text-blue-400 mb-4">Tóm tắt tiến độ bằng AI</h3>
+            <div className="prose prose-sm max-w-none text-gray-800 dark:text-gray-200 mb-4 whitespace-pre-wrap min-h-[100px]">{displayedAiSummary || (isGeneratingSummary ? 'AI đang phân tích...' : 'Bấm nút để tạo tóm tắt.')}</div>
             <button onClick={handleGenerateSummary} disabled={isGeneratingSummary || reports.length === 0} className="bg-secondary text-white font-bold py-2 px-4 rounded-md hover:opacity-90 disabled:bg-gray-400">
                 {isGeneratingSummary ? 'Đang tạo...' : 'Tạo tóm tắt'}
             </button>
-            {reports.length === 0 && <p className="text-xs text-gray-500 mt-2 italic">Cần có ít nhất một báo cáo để tạo tóm tắt.</p>}
+            {reports.length === 0 && <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">Cần có ít nhất một báo cáo để tạo tóm tắt.</p>}
         </>
     );
 
     const calendarContent = (
         <>
-            <h3 className="text-xl font-bold text-primary mb-4">Lịch báo cáo</h3>
+            <h3 className="text-xl font-bold text-primary dark:text-blue-400 mb-4">Lịch báo cáo</h3>
             <CalendarView 
                 reportDates={reportDatesSet}
                 onDateSelect={(date) => setSelectedDateFilter(date)}
@@ -437,7 +437,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                     aria-controls="advanced-tools-panel"
                     disabled={!canUseAi}
                 >
-                    <h2 className="text-3xl font-bold text-gray-800 group-hover:text-primary transition-colors leading-tight">{project.name}</h2>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors leading-tight">{project.name}</h2>
                     {canUseAi && (
                        <TuneIcon className={`h-6 w-6 transition-colors duration-300 ${isAdvancedToolsVisible ? 'text-accent' : 'text-gray-400 group-hover:text-primary'}`} />
                     )}
@@ -458,7 +458,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
         </header>
 
         <div className="mb-6">
-            <nav className="flex space-x-2 p-1 bg-gray-200/70 rounded-lg max-w-max" aria-label="Tabs">
+            <nav className="flex space-x-2 p-1 bg-gray-200 dark:bg-gray-800 rounded-lg max-w-max" aria-label="Tabs">
                 <TabButton tabName="reports" label="Báo cáo" />
                 {canViewApprovals && <TabButton tabName="approvals" label="Phê duyệt" />}
                 {canAccessDocuments && <TabButton tabName="documents" label="Tài liệu" />}
@@ -478,14 +478,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                            <>
                                 {/* --- DESKTOP VIEW: GRID --- */}
                                 <div className="hidden lg:grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                    <div className="bg-base-100 p-6 rounded-lg shadow-md border border-gray-200">{aiSummaryContent}</div>
-                                    <div className="bg-base-100 p-6 rounded-lg shadow-md border border-gray-200">{calendarContent}</div>
+                                    <div className="bg-base-100 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">{aiSummaryContent}</div>
+                                    <div className="bg-base-100 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">{calendarContent}</div>
                                     <ProjectStats reports={reports} />
                                 </div>
     
                                 {/* --- MOBILE VIEW: TABS --- */}
-                                <div className="lg:hidden mb-6 bg-base-100 rounded-lg shadow-md border border-gray-200">
-                                    <div className="border-b border-gray-200">
+                                <div className="lg:hidden mb-6 bg-base-100 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                                    <div className="border-b border-gray-200 dark:border-gray-700">
                                         <nav className="-mb-px flex space-x-4 px-4" aria-label="Tabs">
                                             <TabButtonMobile active={mobileAdvancedTab === 'summary'} onClick={() => setMobileAdvancedTab('summary')}>Tóm tắt AI</TabButtonMobile>
                                             <TabButtonMobile active={mobileAdvancedTab === 'calendar'} onClick={() => setMobileAdvancedTab('calendar')}>Lịch</TabButtonMobile>
@@ -535,7 +535,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                                 );
                             })
                         ) : (
-                            <p className="col-span-full text-center text-gray-500 py-8">
+                            <p className="col-span-full text-center text-gray-500 dark:text-gray-400 py-8">
                                 {selectedDateFilter ? `Không có báo cáo nào cho ngày ${selectedDateFilter}.` : 'Chưa có báo cáo nào cho dự án này.'}
                             </p>
                         )}
@@ -546,7 +546,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             {activeTab === 'approvals' && canViewApprovals && (
                 <div className="animate-fade-in">
                     <ApprovalTimeline project={project} />
-                    <div className="bg-base-100 rounded-lg shadow-md p-6 border border-gray-200">
+                    <div className="bg-base-100 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             <DateSectionCard title="1. Giao danh mục">
                                 <DetailItem label="Số QĐ giao" value={project.capitalPlanApproval?.decisionNumber} />
@@ -610,9 +610,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             )}
 
             {activeTab === 'workItems' && (
-                 <div className="bg-base-100 rounded-lg shadow-md border border-gray-200 animate-fade-in overflow-hidden">
-                    <div className="p-4 border-b flex justify-between items-center bg-white">
-                        <h3 className="text-xl font-bold text-primary">Bảng tiến độ thi công</h3>
+                 <div className="bg-base-100 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 animate-fade-in overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
+                        <h3 className="text-xl font-bold text-primary dark:text-blue-400">Bảng tiến độ thi công</h3>
                         {project.scheduleSheetEditUrl && (
                             <a 
                                 href={project.scheduleSheetEditUrl} 
@@ -629,7 +629,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                         {project.scheduleSheetUrl ? (
                              <iframe src={project.scheduleSheetUrl} className="w-full h-[70vh] border-none" title="Bảng tiến độ thi công"></iframe>
                         ) : (
-                            <div className="p-8 text-center text-gray-500">
+                            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                                 <p>Chưa có kế hoạch tiến độ nào được thêm vào.</p>
                                 {canEditProject && <p className="mt-2 text-sm">Vui lòng vào mục "Chỉnh sửa dự án" để thêm link nhúng từ Google Sheet.</p>}
                             </div>
@@ -639,7 +639,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             )}
             
             {activeTab === 'info' && (
-                <div className="bg-base-100 rounded-lg shadow-md p-6 border border-gray-200 animate-fade-in">
+                <div className="bg-base-100 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700 animate-fade-in">
                     {currentUser?.role === Role.Admin && (
                         <DetailSection title="Nhân sự Phụ trách (Phân quyền)">
                             <DetailItem label="Cán bộ Quản lý" value={projectManagers} icon={<UserGroupIcon />} />

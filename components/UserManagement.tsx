@@ -70,7 +70,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, currentUser, onU
                         <ArrowLeftIcon className="h-5 w-5 mr-2" />
                         Trở về Dashboard
                     </button>
-                    <h2 className="text-3xl font-bold text-gray-800 mt-2">Quản lý Người dùng</h2>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mt-2">Quản lý Người dùng</h2>
                 </div>
             </header>
 
@@ -80,10 +80,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, currentUser, onU
                     {pendingUsers.length > 0 ? (
                         <div className="space-y-3">
                             {pendingUsers.map(user => (
-                                <div key={user.id} className="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                                <div key={user.id} className="flex justify-between items-center bg-white dark:bg-gray-800 p-3 rounded-md shadow-sm">
                                     <div>
-                                        <p className="font-semibold text-gray-800">{user.name}</p>
-                                        <p className="text-sm text-gray-500">{user.email}</p>
+                                        <p className="font-semibold text-gray-800 dark:text-gray-200">{user.name}</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                                     </div>
                                     <button 
                                         onClick={() => onApproveUser(user)}
@@ -95,13 +95,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, currentUser, onU
                             ))}
                         </div>
                     ) : (
-                        <p className="text-gray-600 italic">Không có tài khoản nào đang chờ phê duyệt.</p>
+                        <p className="text-gray-600 dark:text-gray-400 italic">Không có tài khoản nào đang chờ phê duyệt.</p>
                     )}
                 </div>
             </section>
-            
+
             <section>
-                 <h3 className="text-xl font-bold text-gray-800 mb-4">Tài khoản đang hoạt động ({activeUsers.length})</h3>
+                 <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Tài khoản đang hoạt động ({activeUsers.length})</h3>
                 <UserList
                     users={activeUsers}
                     currentUser={currentUser}
