@@ -2,6 +2,7 @@ import React from 'react';
 import type { DailyReport, Project, ProjectReview, User } from '../types.ts';
 import { permissions } from '../services/permissions.ts';
 import { XIcon } from './Icons.tsx';
+import LazyImage from './LazyImage.tsx';
 
 interface ReportDetailsModalProps {
   report: DailyReport;
@@ -119,11 +120,11 @@ const ReportDetailsModal: React.FC<ReportDetailsModalProps> = ({
 
           {report.images.length > 0 && (
             <section>
-              <h4 className="text-lg font-semibold text-gray-800 mb-3">Hình ảnh đính kèm</h4>
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Hình ảnh đính kèm</h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {report.images.map((image, index) => (
                   <div key={index} className="relative group cursor-pointer" onClick={() => onImageClick(report.images, index)}>
-                    <img
+                    <LazyImage
                       src={image}
                       alt={`Hình ảnh báo cáo ${index + 1}`}
                       className="w-full h-32 object-cover rounded-md shadow-sm transition-transform duration-200 group-hover:scale-105"

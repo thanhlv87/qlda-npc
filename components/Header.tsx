@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { User } from '../types.ts';
 import { MenuIcon, XIcon } from './Icons.tsx';
 import NotificationBell from './NotificationBell.tsx';
+import ThemeToggle from './ThemeToggle.tsx';
 
 interface HeaderProps {
     user: User | null;
@@ -13,12 +14,13 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onNavigateToProject }) 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
-        <header className="bg-blue-600 text-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
+        <header className="bg-blue-600 dark:bg-gray-800 text-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30 transition-colors duration-200">
             <h1 className="text-xl sm:text-2xl font-bold truncate">Phần mềm quản lý dự án - NPSC</h1>
             {user && (
                 <div className="relative">
                     {/* Desktop Menu */}
                     <div className="hidden sm:flex items-center space-x-4">
+                        <ThemeToggle />
                         {user.role && <NotificationBell currentUser={user} onNavigateToProject={onNavigateToProject} />}
                         <div>
                             <span className="font-medium">Chào, {user.name} ({user.role || 'Chờ duyệt'})</span>
@@ -33,6 +35,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onNavigateToProject }) 
 
                     {/* Mobile Menu Button */}
                     <div className="sm:hidden flex items-center space-x-2">
+                        <ThemeToggle />
                         {user.role && <NotificationBell currentUser={user} onNavigateToProject={onNavigateToProject} />}
                         <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white focus:outline-none p-1">
                             {isMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
@@ -41,10 +44,10 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onNavigateToProject }) 
 
                     {/* Mobile Menu Dropdown */}
                     {isMenuOpen && (
-                        <div className="sm:hidden absolute top-full right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-40 ring-1 ring-black ring-opacity-5 animate-fade-in">
-                            <div className="px-4 py-3 border-b">
-                                <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
-                                <p className="text-xs text-gray-500">{user.role || 'Chờ duyệt'}</p>
+                        <div className="sm:hidden absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-40 ring-1 ring-black ring-opacity-5 animate-fade-in">
+                            <div className="px-4 py-3 border-b dark:border-gray-700">
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{user.role || 'Chờ duyệt'}</p>
                             </div>
                             <a
                                 href="#"
@@ -53,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onNavigateToProject }) 
                                     onLogout();
                                     setIsMenuOpen(false);
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                             >
                                 Đăng xuất
                             </a>

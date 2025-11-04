@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-// FIX: Switched to Firebase v8 compat imports and syntax to resolve module errors.
-// All modular v9 imports have been removed.
 import { auth, db, googleProvider, firebase, storage, messaging } from './services/firebase.ts';
 import type { User, Project, DailyReport, ProjectReview, Role, ProjectFile, ProjectFolder } from './types.ts';
 import { permissions } from './services/permissions.ts';
 import { fcmService } from './services/fcmService.ts';
+
+// Custom Hooks
+import { useAuth } from './hooks/useAuth.ts';
+import { useProjects } from './hooks/useProjects.ts';
+import { useUsers } from './hooks/useUsers.ts';
+import { useToast } from './hooks/useToast.ts';
 
 // Components
 import Login from './components/Login.tsx';
@@ -23,32 +27,22 @@ const Dashboard = lazy(() => import('./components/Dashboard.tsx'));
 
 
 export type AppView = 'dashboard' | 'projectDetails' | 'addProject' | 'userManagement';
-type ToastMessage = { id: number; message: string; type: 'success' | 'error' };
-// FIX: Defined FirebaseUser type using the v8 compat syntax.
-type FirebaseUser = firebase.User;
 
 const App: React.FC = () => {
-    // Authentication state
-    const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [authError, setAuthError] = useState<string | null>(null);
-    const [isAuthLoading, setIsAuthLoading] = useState(true);
-
-
-    // Data state
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
-    const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([]);
-    const [projectFolders, setProjectFolders] = useState<ProjectFolder[]>([]);
+    // Custom Hooks
+    const { firebaseUser, currentUser, authError, isAuthLoading, setAuthError, setCurrentUser, setFirebaseUser } = useAuth();
+    const { projects, isProjectsLoading } = useProjects(currentUser);
+    const { users } = useUsers(currentUser);
+    const { toasts, addToast, removeToast } = useToast();
 
     // UI/Navigation state
     const [view, setView] = useState<AppView>('dashboard');
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-    const [isProjectsLoading, setIsProjectsLoading] = useState(true);
+    const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([]);
+    const [projectFolders, setProjectFolders] = useState<ProjectFolder[]>([]);
     const [isFilesLoading, setIsFilesLoading] = useState(true);
     const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null);
     const [userToApprove, setUserToApprove] = useState<User | null>(null);
-    const [toasts, setToasts] = useState<ToastMessage[]>([]);
     const [uploadProgress, setUploadProgress] = useState<Record<string, { progress: number; name: string }>>({});
     
     // FIX: Add a guard clause to handle missing Firebase configuration gracefully.
@@ -56,13 +50,13 @@ const App: React.FC = () => {
     // if the necessary environment variables are not set.
     if (!auth || !db || !storage || !googleProvider) {
         return (
-            <div className="min-h-screen bg-neutral flex flex-col items-center justify-center p-4">
-                <div className="text-center bg-base-100 p-8 sm:p-12 rounded-2xl shadow-xl max-w-lg mx-auto border border-red-300">
+            <div className="min-h-screen bg-neutral dark:bg-gray-900 flex flex-col items-center justify-center p-4">
+                <div className="text-center bg-base-100 dark:bg-gray-800 p-8 sm:p-12 rounded-2xl shadow-xl max-w-lg mx-auto border border-red-300 dark:border-red-700">
                     <h2 className="text-2xl sm:text-3xl font-bold text-error mb-4">Lỗi Cấu hình Ứng dụng</h2>
-                    <p className="text-gray-600 mb-2">
+                    <p className="text-gray-600 dark:text-gray-300 mb-2">
                         Không thể kết nối đến dịch vụ backend (Firebase).
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                         (For developers: Please ensure that all `FIREBASE_*` environment variables are correctly set in your deployment environment.)
                     </p>
                 </div>
@@ -70,82 +64,6 @@ const App: React.FC = () => {
         );
     }
 
-    const addToast = (message: string, type: 'success' | 'error') => {
-        const id = Date.now();
-        setToasts(prev => [...prev, { id, message, type }]);
-        setTimeout(() => {
-            setToasts(prev => prev.filter(toast => toast.id !== id));
-        }, 4000);
-    };
-
-    // Effect for handling auth state changes and creating user profiles.
-    // This is the most reliable place to handle user profile creation.
-    useEffect(() => {
-        // FIX: Switched to v8 syntax for onAuthStateChanged.
-        const unsubscribe = auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                // FIX: Switched to v8 syntax for document reference.
-                const userDocRef = db.collection('users').doc(user.uid);
-                // FIX: Switched to v8 syntax for getting a document.
-                const userDoc = await userDocRef.get();
-
-                if (!userDoc.exists) {
-                    // This is a new user. Create their profile document in Firestore.
-                    try {
-                        // FIX: Switched to v8 syntax for setting a document.
-                        await userDocRef.set({
-                            email: user.email,
-                            name: user.displayName || 'Người dùng mới',
-                            role: null, // Pending approval
-                        });
-                        console.log(`Created user document for ${user.email}`);
-                    } catch (error) {
-                        console.error("Error creating user document:", error);
-                    }
-                }
-                setFirebaseUser(user);
-            } else {
-                // User is signed out
-                setFirebaseUser(null);
-                setCurrentUser(null);
-                setIsAuthLoading(false);
-            }
-        });
-        return () => unsubscribe();
-    }, []);
-
-    // Effect for fetching the current user's profile from Firestore
-    // This runs after onAuthStateChanged sets the firebaseUser
-    useEffect(() => {
-        if (!firebaseUser) {
-            setIsAuthLoading(false);
-            return;
-        };
-
-        // FIX: Switched to v8 syntax for document reference.
-        const userDocRef = db.collection('users').doc(firebaseUser.uid);
-        // FIX: Switched to v8 syntax for onSnapshot.
-        const unsubscribe = userDocRef.onSnapshot((userDoc) => {
-            if (userDoc.exists) {
-                const data = userDoc.data();
-                const userData = { id: userDoc.id, ...data } as User;
-                setCurrentUser(userData);
-            } else {
-                // This state can happen briefly for a new user while their doc is being created.
-                // The listener will fire again once the document is created by onAuthStateChanged.
-                setCurrentUser(null);
-            }
-            setIsAuthLoading(false);
-        }, (error) => {
-            console.error("Error fetching user data:", error);
-            setAuthError("Failed to load user profile.");
-            // FIX: Switched to v8 syntax for signOut.
-            auth.signOut();
-            setIsAuthLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [firebaseUser]);
 
     // Effect for setting up FCM push notifications
     useEffect(() => {
@@ -190,102 +108,6 @@ const App: React.FC = () => {
         };
     }, [currentUser?.id, currentUser?.role]);
 
-    // Effect for fetching projects and users for ADMINS (who can see everything)
-    useEffect(() => {
-        if (!currentUser || !currentUser.role) { // Don't fetch data for pending users
-            setProjects([]);
-            // Still need to fetch users if admin, to see pending users
-             if (currentUser && permissions.canFetchAllUsers(currentUser)) {
-                 // continue
-             } else {
-                setUsers([]);
-                setIsProjectsLoading(false);
-                return () => {};
-             }
-        }
-
-        setIsProjectsLoading(true);
-        const unsubs: (() => void)[] = [];
-
-        // For non-Admins, set the users array to just them. Others will be loaded if needed.
-        if (!permissions.canFetchAllUsers(currentUser)) {
-           if(currentUser) setUsers([currentUser]);
-        }
-        // Fetch all users only for Admins
-        else {
-            // FIX: Switched to v8 syntax for collection query.
-            const usersQuery = db.collection('users');
-            // FIX: Switched to v8 syntax for onSnapshot.
-            const usersUnsubscribe = usersQuery.onSnapshot((snapshot) => {
-                const fetchedUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-                // Sort client-side to handle users that might be missing a 'name' field
-                fetchedUsers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                setUsers(fetchedUsers);
-            }, (error) => {
-                console.error("Error fetching users:", error);
-                setUsers([]);
-            });
-            unsubs.push(usersUnsubscribe);
-        }
-
-        // Fetch projects based on permissions
-        if (permissions.canAddProject(currentUser)) { // Admins and Department Heads get all projects
-            // FIX: Switched to v8 syntax for collection query with ordering.
-            const projectsQuery = db.collection('projects').orderBy('name');
-            // FIX: Switched to v8 syntax for onSnapshot.
-            const projectsUnsubscribe = projectsQuery.onSnapshot((snapshot) => {
-                const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-                setProjects(fetchedProjects);
-                setIsProjectsLoading(false);
-            }, (error) => {
-                console.error("Error fetching projects:", error);
-                setIsProjectsLoading(false);
-            });
-            unsubs.push(projectsUnsubscribe);
-        } else if (currentUser) { // PMs and Supervisors get assigned projects
-            // FIX: Switched to v8 syntax for collection query with where clause.
-            const pmQuery = db.collection('projects').where('projectManagerIds', 'array-contains', currentUser.id);
-            // FIX: Switched to v8 syntax for collection query with where clause.
-            const lsQuery = db.collection('projects').where('leadSupervisorIds', 'array-contains', currentUser.id);
-
-            let pmProjects: Project[] = [];
-            let lsProjects: Project[] = [];
-
-            const mergeAndSetProjects = () => {
-                const projectMap = new Map<string, Project>();
-                pmProjects.forEach(p => projectMap.set(p.id, p));
-                lsProjects.forEach(p => projectMap.set(p.id, p));
-                const sortedProjects = Array.from(projectMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-                setProjects(sortedProjects);
-                setIsProjectsLoading(false);
-            };
-
-            // FIX: Switched to v8 syntax for onSnapshot.
-            const unsubPM = pmQuery.onSnapshot((snapshot) => {
-                pmProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-                mergeAndSetProjects();
-            }, (error) => {
-                console.error("Error fetching manager projects:", error);
-                setIsProjectsLoading(false);
-            });
-
-            // FIX: Switched to v8 syntax for onSnapshot.
-            const unsubLS = lsQuery.onSnapshot((snapshot) => {
-                lsProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-                mergeAndSetProjects();
-            }, (error) => {
-                console.error("Error fetching supervisor projects:", error);
-                setIsProjectsLoading(false);
-            });
-            
-            unsubs.push(unsubPM);
-            unsubs.push(unsubLS);
-        }
-
-        return () => {
-            unsubs.forEach(unsub => unsub());
-        };
-    }, [currentUser]);
 
     // Effect for fetching files and folders for the selected project
     useEffect(() => {
@@ -733,8 +555,8 @@ const App: React.FC = () => {
     // Render logic
     if (isAuthLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-base-200">
-                <p className="text-xl">Đang tải ứng dụng...</p>
+            <div className="min-h-screen flex items-center justify-center bg-neutral dark:bg-gray-900">
+                <p className="text-xl dark:text-white">Đang tải ứng dụng...</p>
             </div>
         );
     }
@@ -745,12 +567,12 @@ const App: React.FC = () => {
 
     if (!currentUser) {
          return (
-            <div className="min-h-screen bg-neutral flex flex-col">
+            <div className="min-h-screen bg-neutral dark:bg-gray-900 flex flex-col">
                 <Header user={{id: firebaseUser.uid, email: firebaseUser.email || '', name: firebaseUser.displayName || '', role: null}} onLogout={handleLogout} />
                 <main className="flex-grow flex items-center justify-center p-4">
-                     <div className="text-center bg-base-100 p-8 sm:p-12 rounded-2xl shadow-xl max-w-lg mx-auto border border-gray-200">
-                        <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4">Đang xử lý...</h2>
-                        <p className="text-gray-600">
+                     <div className="text-center bg-base-100 dark:bg-gray-800 p-8 sm:p-12 rounded-2xl shadow-xl max-w-lg mx-auto border border-gray-200 dark:border-gray-700">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-primary dark:text-blue-400 mb-4">Đang xử lý...</h2>
+                        <p className="text-gray-600 dark:text-gray-300">
                             Đang kiểm tra thông tin tài khoản của bạn. Vui lòng đợi trong giây lát.
                         </p>
                      </div>
@@ -762,15 +584,15 @@ const App: React.FC = () => {
     
     if (!currentUser.role) {
         return (
-            <div className="min-h-screen bg-neutral flex flex-col">
+            <div className="min-h-screen bg-neutral dark:bg-gray-900 flex flex-col">
                 <Header user={currentUser} onLogout={handleLogout} />
                 <main className="flex-grow flex items-center justify-center p-4">
-                    <div className="text-center bg-base-100 p-8 sm:p-12 rounded-2xl shadow-xl max-w-lg mx-auto border border-gray-200">
-                        <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4">Tài khoản đang chờ phê duyệt</h2>
-                        <p className="text-gray-600 mb-6">
+                    <div className="text-center bg-base-100 dark:bg-gray-800 p-8 sm:p-12 rounded-2xl shadow-xl max-w-lg mx-auto border border-gray-200 dark:border-gray-700">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-primary dark:text-blue-400 mb-4">Tài khoản đang chờ phê duyệt</h2>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
                             Tài khoản của bạn (<span className="font-semibold">{currentUser.email}</span>) đã được tạo thành công và đang chờ quản trị viên cấp quyền truy cập.
                         </p>
-                        <p className="text-gray-600">
+                        <p className="text-gray-600 dark:text-gray-300">
                             Vui lòng liên hệ quản trị viên để hoàn tất quá trình.
                         </p>
                          <button
@@ -840,7 +662,7 @@ const App: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-neutral flex flex-col">
+        <div className="min-h-screen bg-neutral dark:bg-gray-900 flex flex-col transition-colors duration-200">
             <Header user={currentUser} onLogout={handleLogout} onNavigateToProject={handleSelectProject} />
             <main className="p-4 sm:p-6 lg:p-8 flex-grow">
                 <Suspense fallback={<LoadingSpinner />}>
@@ -864,11 +686,11 @@ const App: React.FC = () => {
             )}
             <div className="fixed bottom-4 right-4 z-50 space-y-2">
                 {toasts.map(toast => (
-                    <Toast 
+                    <Toast
                         key={toast.id}
                         message={toast.message}
                         type={toast.type}
-                        onClose={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                        onClose={() => removeToast(toast.id)}
                     />
                 ))}
             </div>

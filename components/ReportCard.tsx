@@ -1,6 +1,7 @@
 import React from 'react';
 import type { DailyReport, ProjectReview } from '../types.ts';
 import { CheckCircleIcon } from './Icons.tsx';
+import LazyImage from './LazyImage.tsx';
 
 interface ReportCardProps {
   report: DailyReport;
@@ -24,17 +25,17 @@ const ReportCard: React.FC<ReportCardProps> = ({
   const progressToday = Math.max(0, currentProgress - previousProgress);
 
   return (
-    <div 
-      className="bg-base-100 rounded-lg shadow-lg border border-gray-200 flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:ring-2 hover:ring-secondary cursor-pointer"
+    <div
+      className="bg-base-100 dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:ring-2 hover:ring-secondary cursor-pointer"
       onClick={onViewDetails}
     >
       {/* Image Section */}
-      <div 
-        className="relative aspect-video bg-gray-100 flex items-center justify-center overflow-hidden"
+      <div
+        className="relative aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden"
       >
         {firstImage ? (
           <>
-            <img
+            <LazyImage
               src={firstImage}
               alt={`Báo cáo ngày ${report.date}`}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -46,19 +47,19 @@ const ReportCard: React.FC<ReportCardProps> = ({
             )}
           </>
         ) : (
-          <p className="text-sm text-gray-400 italic">Không có hình ảnh</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 italic">Không có hình ảnh</p>
         )}
       </div>
 
       {/* Content Section */}
       <div className="p-2 flex flex-col flex-grow">
         <div className="mb-1">
-            <h4 className="text-sm font-bold text-primary">{report.date}</h4>
-            <span className="text-xs text-gray-500">Bởi: {report.submittedBy}</span>
+            <h4 className="text-sm font-bold text-primary dark:text-blue-400">{report.date}</h4>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Bởi: {report.submittedBy}</span>
         </div>
-        
+
         <div className="flex-grow mt-1">
-          <p className="text-sm text-gray-800 line-clamp-2" title={report.tasks}>
+          <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2" title={report.tasks}>
             {report.tasks}
           </p>
         </div>
