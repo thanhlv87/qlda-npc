@@ -197,6 +197,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
     const [isAdvancedToolsVisible, setIsAdvancedToolsVisible] = useState(false);
     const [mobileAdvancedTab, setMobileAdvancedTab] = useState<'summary' | 'calendar' | 'stats'>('summary');
+    
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const REPORTS_PER_PAGE = 10;
 
 
     // Effect for fetching reports for the current project
@@ -331,6 +335,24 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
         if (!selectedDateFilter) return reports;
         return reports.filter(r => r.date === selectedDateFilter);
     }, [reports, selectedDateFilter]);
+
+    // Pagination logic
+    const paginatedReports = useMemo(() => {
+        const startIndex = (currentPage - 1) * REPORTS_PER_PAGE;
+        const endIndex = startIndex + REPORTS_PER_PAGE;
+        return filteredReports.slice(startIndex, endIndex);
+    }, [filteredReports, currentPage]);
+
+    const totalPages = Math.ceil(filteredReports.length / REPORTS_PER_PAGE);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        // Scroll to top of reports section when changing pages
+        const reportsSection = document.getElementById('reports-section');
+        if (reportsSection) {
+            reportsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
 
 
     if (view === 'editProject') {
@@ -515,29 +537,121 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                             </button>
                         </div>
                     )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                        {isReportsLoading ? (
-                            [...Array(12)].map((_, i) => <ReportCardSkeleton key={i} />)
-                        ) : filteredReports.length > 0 ? (
-                            filteredReports.map((report, index) => {
-                                // Find the correct previous report from the original sorted 'reports' array
-                                const originalIndex = reports.findIndex(r => r.id === report.id);
-                                const previousReport = reports[originalIndex + 1];
-                                const previousProgress = previousReport?.progressPercentage ?? 0;
-                                return (
-                                    <ReportCard
-                                        key={report.id}
-                                        report={report}
-                                        onViewDetails={() => setViewingReport(report)}
-                                        reviews={report.managerReviews || []}
-                                        previousProgressPercentage={previousProgress}
-                                    />
-                                );
-                            })
-                        ) : (
-                            <p className="col-span-full text-center text-gray-500 dark:text-gray-400 py-8">
-                                {selectedDateFilter ? `Không có báo cáo nào cho ngày ${selectedDateFilter}.` : 'Chưa có báo cáo nào cho dự án này.'}
-                            </p>
+                    <div id="reports-section" className="space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                            {isReportsLoading ? (
+                                [...Array(12)].map((_, i) => <ReportCardSkeleton key={i} />)
+                            ) : paginatedReports.length > 0 ? (
+                                paginatedReports.map((report, index) => {
+                                    // Find the correct previous report from the original sorted 'reports' array
+                                    const originalIndex = reports.findIndex(r => r.id === report.id);
+                                    const previousReport = reports[originalIndex + 1];
+                                    const previousProgress = previousReport?.progressPercentage ?? 0;
+                                    return (
+                                        <ReportCard
+                                            key={report.id}
+                                            report={report}
+                                            onViewDetails={() => setViewingReport(report)}
+                                            reviews={report.managerReviews || []}
+                                            previousProgressPercentage={previousProgress}
+                                        />
+                                    );
+                                })
+                            ) : (
+                                <p className="col-span-full text-center text-gray-500 dark:text-gray-400 py-8">
+                                    {selectedDateFilter ? `Không có báo cáo nào cho ngày ${selectedDateFilter}.` : 'Chưa có báo cáo nào cho dự án này.'}
+                                </p>
+                            )}
+                        </div>
+                        
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center items-center space-x-2 py-4">
+                                <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className={`px-3 py-1 rounded-md ${currentPage === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-primary text-white hover:bg-blue-700'}`}
+                                >
+                                    Trước
+                                </button>
+                                
+                                {/* Page numbers with ellipsis for large number of pages */}
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum;
+                                    if (totalPages <= 5) {
+                                        // Show all pages if total is 5 or less
+                                        pageNum = i + 1;
+                                    } else if (currentPage <= 3) {
+                                        // Show first 4 pages and last page
+                                        if (i < 4) pageNum = i + 1;
+                                        else pageNum = totalPages;
+                                    } else if (currentPage >= totalPages - 2) {
+                                        // Show first page and last 4 pages
+                                        if (i === 0) pageNum = 1;
+                                        else pageNum = totalPages - 4 + i;
+                                    } else {
+                                        // Show pages around current page
+                                        if (i === 0) pageNum = 1;
+                                        else if (i === 4) pageNum = totalPages;
+                                        else pageNum = currentPage - 2 + i;
+                                    }
+                                    
+                                    // Add ellipsis when needed
+                                    if (i > 0 && totalPages > 5 &&
+                                        ((currentPage <= 3 && i === 3) ||
+                                         (currentPage >= totalPages - 2 && i === 1) ||
+                                         (currentPage > 3 && currentPage < totalPages - 2 && i === 2))) {
+                                        return (
+                                            <span key={`ellipsis-${i}`} className="px-3 py-1">
+                                                ...
+                                            </span>
+                                        );
+                                    }
+                                    
+                                    // Skip duplicate page numbers
+                                    if (pageNum &&
+                                        (i === 0 ||
+                                         i === 4 ||
+                                         (totalPages <= 5) ||
+                                         (currentPage > 3 && currentPage < totalPages - 2 && i > 0 && i < 4) ||
+                                         (pageNum !== (i > 0 ? Array.from({ length: Math.min(5, totalPages) }, (_, j) => {
+                                             if (totalPages <= 5) return j + 1;
+                                             else if (currentPage <= 3) return j < 4 ? j + 1 : totalPages;
+                                             else if (currentPage >= totalPages - 2) return j === 0 ? 1 : totalPages - 4 + j;
+                                             else return j === 0 ? 1 : j === 4 ? totalPages : currentPage - 2 + j;
+                                         })[i-1] : 0)))) {
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => handlePageChange(pageNum)}
+                                                className={`px-3 py-1 rounded-md ${
+                                                    currentPage === pageNum
+                                                        ? 'bg-primary text-white'
+                                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                                }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                                
+                                <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className={`px-3 py-1 rounded-md ${currentPage === totalPages ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-primary text-white hover:bg-blue-700'}`}
+                                >
+                                    Sau
+                                </button>
+                            </div>
+                        )}
+                        
+                        {/* Page info */}
+                        {filteredReports.length > 0 && (
+                            <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                                Hiển thị {Math.min((currentPage - 1) * REPORTS_PER_PAGE + 1, filteredReports.length)} - {Math.min(currentPage * REPORTS_PER_PAGE, filteredReports.length)} trong số {filteredReports.length} báo cáo
+                            </div>
                         )}
                     </div>
                 </div>
